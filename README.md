@@ -11,6 +11,46 @@ It's 2026 and there's still no good way to:
 
 EPUB3 Media Overlays exist. Reader support doesn't. So here we are.
 
+## How It Works
+
+**Generate on desktop. Read anywhere.**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         DESKTOP                                 │
+│              (Windows, Mac, Linux)                              │
+│                                                                 │
+│   ┌─────────┐      ┌─────────────┐      ┌─────────────────┐    │
+│   │  Book   │ ───► │  Generate   │ ───► │  Book + Audio   │    │
+│   │  (any)  │      │   Audio     │      │   + Sync Data   │    │
+│   └─────────┘      └─────────────┘      └────────┬────────┘    │
+│                     Chatterbox TTS               │              │
+│                     (local, free)                │              │
+│                                                  ▼              │
+│                                          ┌─────────────┐        │
+│                                          │    READ     │        │
+│                                          │   (here)    │        │
+│                                          └─────────────┘        │
+└─────────────────────────────────────────────────────────────────┘
+                                 │
+                                 │ sync
+                                 ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      MOBILE / WEB                               │
+│              (iOS, Android, Browser)                            │
+│                                                                 │
+│                         ┌─────────────┐                         │
+│                         │    READ     │                         │
+│                         │   (only)    │                         │
+│                         └─────────────┘                         │
+│                                                                 │
+│              No generation - just plays synced audio            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Desktop** = Full experience: import books, generate audio, read with sync
+**Mobile/Web** = Reader only: plays pre-generated audio synced to text
+
 ## Features (Planned)
 
 - **Multi-format support**: EPUB, PDF, Markdown, Org-mode
@@ -22,10 +62,10 @@ EPUB3 Media Overlays exist. Reader support doesn't. So here we are.
 
 ## Tech Stack
 
-- **Desktop/Mobile**: [Tauri](https://tauri.app/) + Rust
-- **Frontend**: TBD
-- **TTS Engine**: TBD (likely pluggable - local or cloud)
-- **Audio Sync**: Custom SMIL-like system
+- **Runtime**: [Tauri 2.0](https://tauri.app/) + Rust (desktop & mobile)
+- **Frontend**: React + TypeScript
+- **TTS Engine**: [Chatterbox](https://github.com/resemble-ai/chatterbox) (local, free, voice cloning)
+- **Audio Sync**: Custom JSON timestamp format
 
 ## Status
 

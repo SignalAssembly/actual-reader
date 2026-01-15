@@ -24,7 +24,67 @@ Users who want to "read along" with audio must either:
 1. Opens any ebook/document (EPUB, PDF, Markdown, Org)
 2. Generates high-quality TTS audio with timestamp mapping
 3. Plays audio with synchronized text highlighting
-4. Works identically on desktop, mobile, and web
+4. Works on desktop, mobile, and web
+
+---
+
+## Architecture: Generate on Desktop, Read Anywhere
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         DESKTOP                                 │
+│              (Windows, Mac, Linux)                              │
+│                                                                 │
+│   ┌─────────┐      ┌─────────────┐      ┌─────────────────┐    │
+│   │  Book   │ ───► │  Generate   │ ───► │  Book + Audio   │    │
+│   │  (any)  │      │   Audio     │      │   + Sync Data   │    │
+│   └─────────┘      └─────────────┘      └────────┬────────┘    │
+│                     Chatterbox TTS               │              │
+│                     (local, free)                │              │
+│                                                  ▼              │
+│                                          ┌─────────────┐        │
+│                                          │    READ     │        │
+│                                          │   (here)    │        │
+│                                          └─────────────┘        │
+└─────────────────────────────────────────────────────────────────┘
+                                 │
+                                 │ sync
+                                 ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      MOBILE / WEB                               │
+│              (iOS, Android, Browser)                            │
+│                                                                 │
+│                         ┌─────────────┐                         │
+│                         │    READ     │                         │
+│                         │   (only)    │                         │
+│                         └─────────────┘                         │
+│                                                                 │
+│              No generation - plays synced audio only            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Why This Split?
+
+TTS generation (especially with voice cloning) requires:
+- GPU acceleration (NVIDIA CUDA, AMD ROCm, or Apple MPS)
+- 4+ GB VRAM
+- Python runtime with PyTorch
+
+Mobile devices and browsers cannot run this. Desktop can.
+
+### Platform Capabilities
+
+| Platform | Generate Audio | Read with Sync |
+|----------|---------------|----------------|
+| Linux + NVIDIA | ✅ | ✅ |
+| Linux + AMD | ✅ | ✅ |
+| Windows + NVIDIA | ✅ | ✅ |
+| Windows + AMD | ✅ | ✅ |
+| Mac (Apple Silicon) | ✅ | ✅ |
+| Mac (Intel) | ⚠️ CPU only, slow | ✅ |
+| iOS | ❌ | ✅ |
+| Android | ❌ | ✅ |
+| Web Browser | ❌ | ✅ |
 
 ---
 
@@ -65,36 +125,37 @@ Users who want to "read along" with audio must either:
 
 ## Technical Architecture
 
-### Stack (Proposed)
+### Stack
 
 | Layer | Technology | Rationale |
 |-------|------------|-----------|
 | Desktop Runtime | Tauri 2.0 | Small binary, Rust backend, native webview |
 | Mobile Runtime | Tauri Mobile | Same codebase as desktop |
 | Web Runtime | Static deploy | Same frontend, no backend needed |
-| Frontend | ? | TBD - discuss options |
-| TTS Engine | Pluggable | Local (Piper, Chatterbox) or Cloud (ElevenLabs) |
+| Frontend | React + TypeScript | Best LLM support, massive ecosystem |
+| TTS Engine | Chatterbox (local) | Free, voice cloning, runs on all desktop GPUs |
 | Format Parsing | Rust crates | epub, pdf, markdown parsers |
-| Audio Sync | Custom | JSON timestamp format, inspired by SMIL |
+| Audio Sync | Custom JSON | Timestamp format inspired by SMIL |
 
-### Frontend Options to Discuss
+### TTS Engine: Chatterbox
 
-1. **Vanilla JS/HTML/CSS** - Simple, no build step, maximum control
-2. **Svelte** - Minimal overhead, compiles away
-3. **SolidJS** - React-like but actually fast
-4. **Leptos** - Rust-native, WASM, but more complex
+**Why Chatterbox?**
+- Free and open source (MIT license)
+- Voice cloning capability
+- Runs locally - no API costs, no internet required
+- Works on NVIDIA (CUDA), AMD (ROCm), and Apple Silicon (MPS)
 
-### TTS Integration Options
+**Platform-specific notes:**
+- Linux/Windows + NVIDIA: Native CUDA, best performance
+- Linux + AMD: ROCm support
+- Mac Apple Silicon: MPS support via community patches
+  - [chatterbox-tts-apple-silicon-code](https://huggingface.co/Jimmi42/chatterbox-tts-apple-silicon-code)
+  - Known memory leak issue, but functional
+- Mac Intel: CPU-only, slow but works
 
-1. **Local-first (Recommended)**
-   - Piper (fast, offline, good quality)
-   - Chatterbox (voice cloning, GPU required)
-   - Coqui TTS (flexible, many models)
-
-2. **Cloud fallback**
-   - ElevenLabs (best quality, paid)
-   - OpenAI TTS (good quality, paid)
-   - Google Cloud TTS (okay quality, paid)
+**Optional cloud fallback:**
+- ElevenLabs API for users who prefer cloud
+- Useful for Mac Intel users who want faster generation
 
 ### Data Model
 
@@ -148,11 +209,12 @@ Position {
 ## MVP Scope
 
 For v0.1, focus on:
-1. Desktop only (Tauri)
+1. Desktop only (Windows, Mac, Linux via Tauri)
 2. EPUB and Markdown support
-3. Single TTS engine (Piper)
+3. Chatterbox TTS (local generation)
 4. Paragraph-level sync
-5. Local storage only (no sync)
+5. Local storage only (no cross-device sync)
+6. React + TypeScript frontend
 
 ---
 
