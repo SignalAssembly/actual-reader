@@ -49,7 +49,25 @@ EPUB3 Media Overlays exist. Reader support doesn't. So here we are.
 ```
 
 **Desktop** = Full experience: import books, generate audio, read with sync
-**Mobile/Web** = Reader only: plays pre-generated audio synced to text
+**Mobile/Web** = Reader only: plays pre-generated audio
+
+### Getting Books to Mobile
+
+| Method | How |
+|--------|-----|
+| **Local WiFi** | Desktop and mobile on same network, sync automatically |
+| **Manual transfer** | Export from desktop, transfer via USB/AirDrop/email |
+
+Cloud sync may come later if there's demand.
+
+### Mobile Installation
+
+| Platform | Method |
+|----------|--------|
+| **Android** | Sideload APK from GitHub releases |
+| **iOS** | Sideload via jailbreak |
+
+No app stores. You own your device, you install what you want. synced to text
 
 ## Features (Planned)
 

@@ -117,9 +117,11 @@ Mobile devices and browsers cannot run this. Desktop can.
 
 ### Cross-Platform
 - [ ] As a user, I can use the app on Windows, Mac, and Linux
-- [ ] As a user, I can use the app on iOS and Android
+- [ ] As a user, I can use the app on iOS (sideload via jailbreak)
+- [ ] As a user, I can use the app on Android (sideload APK)
 - [ ] As a user, I can use the app in a web browser
-- [ ] As a user, my reading position syncs across devices
+- [ ] As a user, I can sync books to mobile via local WiFi
+- [ ] As a user, I can manually transfer books to mobile (export/import)
 
 ---
 
@@ -156,6 +158,36 @@ Mobile devices and browsers cannot run this. Desktop can.
 **Optional cloud fallback:**
 - ElevenLabs API for users who prefer cloud
 - Useful for Mac Intel users who want faster generation
+
+### Sync Strategy
+
+**No cloud.** Users sync between devices locally.
+
+| Method | Description |
+|--------|-------------|
+| **Local WiFi sync** | Desktop runs local server, mobile connects on same network |
+| **Manual transfer** | Export book bundle (book + audio + sync data), transfer via USB/AirDrop/email, import on mobile |
+
+Cloud sync may be added later if there's demand, but it's not a priority. Users own their data.
+
+### Distribution
+
+No app stores. Sideload only.
+
+| Platform | Distribution |
+|----------|-------------|
+| Windows | `.exe` / `.msi` from GitHub releases |
+| Mac | `.dmg` from GitHub releases |
+| Linux | `.AppImage` / `.deb` from GitHub releases |
+| Android | `.apk` sideload from GitHub releases |
+| iOS | Sideload via jailbreak (`.ipa`) |
+| Web | Self-host or use hosted instance |
+
+**Why no app stores?**
+- Apple charges $99/year for the privilege
+- Google charges $25 one-time
+- Review processes add friction
+- We want users to own their devices
 
 ### Data Model
 
@@ -200,21 +232,26 @@ Position {
 1. **Sync granularity**: Paragraph-level or sentence-level highlighting?
 2. **PDF handling**: Extract text or render as images with overlay?
 3. **Voice management**: How to handle multiple voices per book (e.g., different characters)?
-4. **Offline sync**: How to sync library/position without a server?
-5. **Audio storage**: Store in app data or alongside book files?
-6. **DRM**: Support DRM-protected EPUBs? (Probably no)
+4. **Audio storage**: Store in app data or alongside book files?
+5. **DRM**: Support DRM-protected EPUBs? (Probably no)
+6. **Book bundle format**: What format for exported book+audio+sync packages?
 
 ---
 
 ## MVP Scope
 
 For v0.1, focus on:
-1. Desktop only (Windows, Mac, Linux via Tauri)
+1. Desktop app (Windows, Mac, Linux via Tauri)
 2. EPUB and Markdown support
 3. Chatterbox TTS (local generation)
-4. Paragraph-level sync
-5. Local storage only (no cross-device sync)
+4. Paragraph-level sync highlighting
+5. Manual export/import for mobile transfer
 6. React + TypeScript frontend
+
+For v0.2:
+1. Mobile apps (Android APK, iOS via jailbreak)
+2. Local WiFi sync between desktop and mobile
+3. Reading position sync
 
 ---
 
