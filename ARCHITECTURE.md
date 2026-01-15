@@ -134,6 +134,7 @@ src-tauri/
 │   │   ├── parser/
 │   │   │   ├── epub.rs
 │   │   │   ├── markdown.rs
+│   │   │   ├── txt.rs
 │   │   │   └── pdf.rs
 │   │   ├── tts.rs        # TTS bridge, desktop only
 │   │   ├── sync.rs
@@ -160,7 +161,7 @@ User selects file
         │
         ▼
 ┌───────────────┐
-│ Parser Service│ ─── Detects format (EPUB/MD/PDF)
+│ Parser Service│ ─── Detects format (EPUB/MD/TXT/PDF)
 └───────┬───────┘
         │
         ▼
@@ -257,11 +258,12 @@ User saves .actualbook file
 DESKTOP                              MOBILE
    │                                    │
    │  ┌─────────────────────────────┐   │
-   │  │ Sync Server (mDNS/Bonjour)  │   │
+   │  │ Sync Server (HTTP + mDNS)   │   │
    │  │ Listens on local network    │   │
    │  └──────────────┬──────────────┘   │
    │                 │                   │
-   │    ◄────── Discovery ──────►       │
+   │    ◄─── Discovery (mDNS) ────►     │
+   │    ◄── OR manual IP entry ────►    │
    │                 │                   │
    │  ┌──────────────┴──────────────┐   │
    │  │                             │   │
@@ -277,6 +279,8 @@ DESKTOP                              MOBILE
    │    ◄───── Sync progress ──────     │
    │                                    │
 ```
+
+**Note:** mDNS discovery is convenience, not required. Users can always enter the desktop's IP address manually. This handles complex networks (VLANs, corporate firewalls) where mDNS doesn't work.
 
 ---
 
@@ -335,7 +339,7 @@ CREATE TABLE books (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     author TEXT,
-    source_format TEXT NOT NULL,  -- 'epub', 'markdown', 'pdf'
+    source_format TEXT NOT NULL,  -- 'epub', 'markdown', 'txt', 'pdf'
     source_path TEXT NOT NULL,
     narration_status TEXT NOT NULL DEFAULT 'none',  -- 'none', 'generating', 'ready'
     narration_path TEXT,

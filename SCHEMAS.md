@@ -15,7 +15,7 @@ type VoiceId = string;       // "voice_" + UUID v4
 type Timestamp = number;     // Unix timestamp (seconds)
 type Duration = number;      // Seconds (float)
 
-type SourceFormat = 'epub' | 'markdown' | 'pdf';
+type SourceFormat = 'epub' | 'markdown' | 'txt' | 'pdf';
 type NarrationStatus = 'none' | 'generating' | 'ready';
 type Engine = 'chatterbox' | 'piper' | 'elevenlabs';
 
@@ -100,6 +100,7 @@ pub struct VoiceId(pub String);
 pub enum SourceFormat {
     Epub,
     Markdown,
+    Txt,
     Pdf,
 }
 
@@ -203,7 +204,7 @@ pub struct Voice {
 - `id`: UUID v4, unique per bundle
 - `title`: Required, non-empty string
 - `author`: Optional, null if unknown
-- `sourceFormat`: One of "epub", "markdown", "pdf"
+- `sourceFormat`: One of "epub", "markdown", "txt", "pdf"
 - `createdAt`: Unix timestamp (seconds)
 - `voice.name`: Display name of voice
 - `voice.engine`: One of "chatterbox", "piper", "elevenlabs"

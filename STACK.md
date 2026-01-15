@@ -123,8 +123,21 @@ pydub>=0.25.0
 
 | Platform | Minimum OS | Notes |
 |----------|------------|-------|
-| iOS | iOS 14+ | Requires jailbreak for sideload |
+| iOS | iOS 14+ | AltStore (7-day refresh) or TrollStore (iOS ≤17.0) or jailbreak |
 | Android | Android 8+ (API 26) | APK sideload |
+
+### Why Tauri Mobile (Not Capacitor)
+
+We use Tauri 2.0 for mobile instead of Capacitor because:
+
+1. **Single wrapper** - Same `invoke()` API on desktop and mobile, zero abstraction layers
+2. **Single build system** - One toolchain to learn and maintain
+3. **Shared Rust backend** - Business logic runs identically everywhere
+4. **Simpler codebase** - No platform-specific bridges to maintain
+
+Tauri mobile is newer (late 2024), but our mobile app is read-only with basic needs (WebView, audio, SQLite). We don't need push notifications, background tasks, or complex native APIs where Tauri mobile is less proven.
+
+If Tauri mobile proves problematic, switching to Capacitor costs ~2-3 days—the React code stays identical, only the native bridge changes.
 
 ### GPU (for TTS)
 

@@ -21,7 +21,7 @@ Users who want to "read along" with audio must either:
 ## Solution
 
 **Actual Reader**: A cross-platform app that:
-1. Opens any ebook/document (EPUB, PDF, Markdown, Org)
+1. Opens any ebook/document (EPUB, Markdown, TXT, PDF)
 2. Generates high-quality TTS audio with timestamp mapping
 3. Plays audio with synchronized text highlighting
 4. Works on desktop, mobile, and web
@@ -92,8 +92,9 @@ Mobile devices and browsers cannot run this. Desktop can.
 
 ### Core Reading Experience
 - [ ] As a user, I can open an EPUB file and read it
-- [ ] As a user, I can open a PDF file and read it
 - [ ] As a user, I can open a Markdown file and read it
+- [ ] As a user, I can open a TXT file and read it
+- [ ] As a user, I can open a PDF file and read it (best-effort text extraction)
 - [ ] As a user, I can adjust font size, theme, and reading preferences
 
 ### Audio Generation
@@ -180,7 +181,7 @@ No app stores. Sideload only.
 | Mac | `.dmg` from GitHub releases |
 | Linux | `.AppImage` / `.deb` from GitHub releases |
 | Android | `.apk` sideload from GitHub releases |
-| iOS | Sideload via jailbreak (`.ipa`) |
+| iOS | Sideload via AltStore (7-day refresh), TrollStore (iOS ≤17.0), or jailbreak |
 | Web | Self-host or use hosted instance |
 
 **Why no app stores?**
@@ -195,7 +196,7 @@ No app stores. Sideload only.
 Book {
   id: uuid
   title: string
-  format: epub | pdf | markdown | org
+  format: epub | markdown | txt | pdf
   source_path: string
   audio_status: none | generating | ready
   audio_path: string?
@@ -242,7 +243,7 @@ Position {
 
 For v0.1, focus on:
 1. Desktop app (Windows, Mac, Linux via Tauri)
-2. EPUB and Markdown support
+2. EPUB, Markdown, and TXT support (PDF deferred - complex, low ROI)
 3. Chatterbox TTS (local generation)
 4. Paragraph-level sync highlighting
 5. Manual export/import for mobile transfer
