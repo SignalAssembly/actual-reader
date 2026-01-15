@@ -233,7 +233,7 @@ Position {
 2. **PDF handling**: Extract text or render as images with overlay?
 3. **Voice management**: How to handle multiple voices per book (e.g., different characters)?
 4. **Audio storage**: Store in app data or alongside book files?
-5. **DRM**: Support DRM-protected EPUBs? (Probably no)
+5. ~~**DRM**: Support DRM-protected EPUBs?~~ **No.** Users strip DRM themselves before importing (Calibre + DeDRM). We read clean files only.
 6. **Book bundle format**: What format for exported book+audio+sync packages?
 
 ---
