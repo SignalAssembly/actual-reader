@@ -340,7 +340,8 @@ CREATE TABLE books (
     narration_status TEXT NOT NULL DEFAULT 'none',  -- 'none', 'generating', 'ready'
     narration_path TEXT,
     created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
+    updated_at INTEGER NOT NULL,
+    last_opened_at INTEGER       -- NULL if never opened, for "Recent" section
 );
 
 -- Text segments

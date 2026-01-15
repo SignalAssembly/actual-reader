@@ -29,6 +29,7 @@ interface Book {
     narrationPath: string | null;
     createdAt: Timestamp;
     updatedAt: Timestamp;
+    lastOpenedAt: Timestamp | null;  // NULL if never opened, for "Recent" section
 }
 
 interface Segment {
@@ -130,6 +131,7 @@ pub struct Book {
     pub narration_path: Option<String>,
     pub created_at: i64,
     pub updated_at: i64,
+    pub last_opened_at: Option<i64>,  // None if never opened
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
