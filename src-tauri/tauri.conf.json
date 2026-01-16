@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "dev.actualreader.app",
   "build": {
-    "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "pnpm dev",
-    "beforeBuildCommand": "pnpm build"
+    "frontendDist": "../dist-solid",
+    "devUrl": "http://localhost:5174",
+    "beforeDevCommand": "pnpm --dir src-solid dev",
+    "beforeBuildCommand": "pnpm --dir src-solid build"
   },
   "app": {
     "windows": [
