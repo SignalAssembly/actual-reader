@@ -35,35 +35,36 @@ Need a cross-platform framework that supports Windows, Mac, Linux, iOS, and Andr
 
 ---
 
-## ADR-002: React + TypeScript for Frontend
+## ADR-002: Solid.js + TypeScript for Frontend
 
-**Status:** Accepted
-**Date:** 2026-01-15
+**Status:** Accepted (Updated)
+**Date:** 2026-01-16 (Originally 2026-01-15)
 
 ### Decision
-Use React with TypeScript for the frontend UI.
+Use Solid.js with TypeScript for the frontend UI.
 
 ### Context
-Need a frontend framework that works well with Tauri's webview and has strong LLM tooling support for development.
+Originally chose React for LLM tooling support. Migrated to Solid.js for better performance and developer experience.
 
-### Options Considered
+### Options Considered (Original)
 1. **React + TypeScript** - Massive ecosystem, best LLM training data
 2. **Svelte** - Smaller bundles, but less LLM familiarity
 3. **SolidJS** - Fast, but small ecosystem
 4. **Vanilla JS** - No dependencies, but more boilerplate
 5. **Leptos (Rust/WASM)** - Pure Rust, but complex setup
 
-### Rationale
-- React has the most Stack Overflow answers, GitHub examples, and LLM training data
-- TypeScript catches errors at compile time
-- Huge ecosystem of libraries (epub parsing, PDF rendering, etc.)
-- Team familiarity
-- LLM agents will write better React code than alternatives
+### Rationale for Solid.js Migration
+- **No virtual DOM overhead**: Fine-grained reactivity is more efficient
+- **Simpler mental model**: No hook rules, no stale closures
+- **Smaller bundles**: Better for desktop app startup
+- **JSX familiarity**: Migration from React is straightforward
+- **LLM support improved**: Claude and other models now handle Solid.js well
+- **Reactive primitives**: createSignal/createEffect simpler than useState/useEffect
 
 ### Consequences
-- Larger bundle than Svelte/Solid
-- React's virtual DOM overhead (acceptable for our use case)
-- Must manage React's complexity (hooks, state management)
+- Smaller ecosystem than React (acceptable - our needs are simple)
+- Some libraries may need adaptation
+- Team learns new reactive patterns (quick transition from React)
 
 ---
 
@@ -405,3 +406,122 @@ Not every user wants audio narration for every book. Some may want to:
 - Need to persist user preference
 - Library view needs status indicators
 - Background processing queue management
+
+---
+
+## ADR-013: Voice System with Presets
+
+**Status:** Accepted
+**Date:** 2026-01-16
+
+### Decision
+Implement a voice system with Voices, Presets, and Profiles for TTS generation.
+
+### Context
+Users need flexibility in how their narration sounds. Simple voice selection isn't enough - users want to control expressiveness, quality, and variation. Need a system that's simple to use but powerful enough for customization.
+
+### Terminology
+
+- **Voice**: A voice sample used for cloning. Can be default (shipped with app) or custom (user-created from uploaded audio/video).
+- **Preset**: A saved combination of TTS parameters (exaggeration, CFG weight, temperature). Can be global (applies to any voice) or local (saved within a specific profile).
+- **Profile**: A Voice + Preset combination. The complete configuration for a narration style.
+
+### Built-in Presets
+
+| Preset | Exaggeration | CFG Weight | Temperature | Character |
+|--------|--------------|------------|-------------|-----------|
+| Robot | 0.05 | 0.7 | 0.5 | Flat, mechanical |
+| Calm | 0.25 | 0.5 | 0.7 | Gentle, soothing |
+| Default | 0.5 | 0.5 | 0.8 | Balanced, natural |
+| Expressive | 0.8 | 0.4 | 0.9 | Animated, engaging |
+| Dramatic | 1.2 | 0.3 | 1.0 | Theatrical, intense |
+| Unhinged | 2.0 | 0.2 | 1.3 | Wild, unpredictable |
+
+### Voice Upload Flow
+
+1. User clicks "Add Voice" in Generator
+2. User uploads video or audio file
+3. App extracts 10-second sample from best segment
+4. Sample is saved as voice clone reference
+5. Voice appears in dropdown, ready to use
+
+### Rationale
+- Presets give quick access to common styles
+- Global presets work with any voice
+- Local presets allow per-voice customization
+- Sliders give fine-grained control when needed
+- Separation of Voice and Preset allows mixing and matching
+
+### Consequences
+- More complex UI than simple voice dropdown
+- Need to persist presets in database
+- Generator view needs parameter controls
+- Voice management UI required
+
+---
+
+## ADR-014: WAV Audio Format (Not MP3)
+
+**Status:** Accepted
+**Date:** 2026-01-16
+
+### Decision
+Store generated narration as WAV files, not MP3.
+
+### Context
+Chatterbox TTS generates WAV output. Need to decide whether to transcode to MP3 or keep as WAV.
+
+### Options Considered
+1. **MP3**: Smaller files, universal playback
+2. **WAV**: No quality loss, simpler pipeline
+3. **FLAC**: Lossless compression, but less universal
+
+### Rationale
+- Chatterbox outputs WAV natively
+- Transcoding adds complexity and processing time
+- Storage is cheap (these are local files, not cloud)
+- WAV plays in all browsers and platforms
+- No quality loss from compression
+- Simpler implementation (no ffmpeg dependency)
+
+### Consequences
+- Larger file sizes (~10x larger than MP3)
+- Acceptable for desktop storage
+- Bundle export might want MP3 option later (optimization)
+
+---
+
+## ADR-015: Library Sorting with Manual Ordering
+
+**Status:** Accepted
+**Date:** 2026-01-16
+
+### Decision
+Implement multiple sort modes for the library, including manual ordering that's saved separately for grid and list views.
+
+### Context
+Users want control over how their books are displayed. Some prefer chronological, others alphabetical, others manual arrangement.
+
+### Sort Modes
+1. **Date Added** (default): Most recent imports first
+2. **Last Opened**: Recently read books first
+3. **Alphabetical**: By title, A-Z or Z-A
+4. **Manual**: User-defined order via drag-and-drop (grid) or up/down (list)
+
+### Why Separate Grid/List Order
+- Grid view is spatial (where on the screen)
+- List view is sequential (what order in the list)
+- Users might want different arrangements for each
+- Switching views shouldn't scramble their arrangement
+
+### Rationale
+- Date Added is sensible default for new users
+- Manual ordering gives power users full control
+- Separate orders for grid/list respects different use patterns
+- Preferences persist across sessions and sync across devices
+
+### Consequences
+- Need to store two separate order arrays
+- Drag-and-drop implementation in grid
+- Up/down buttons or drag in list
+- Sort mode UI in library header

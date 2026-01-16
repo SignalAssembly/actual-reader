@@ -12,7 +12,7 @@ Technical architecture for Actual Reader.
 │                         (Windows, Mac, Linux)                               │
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                         FRONTEND (React)                            │   │
+│  │                         FRONTEND (Solid.js)                            │   │
 │  │                                                                     │   │
 │  │  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────────┐   │   │
 │  │  │  Library  │  │  Reader   │  │ Generator │  │   Settings    │   │   │
@@ -46,7 +46,9 @@ Technical architecture for Actual Reader.
 │  │  ~/ActualReader/                                                    │   │
 │  │  ├── library.db          # SQLite: books, progress, settings       │   │
 │  │  ├── sources/            # Original imported files                  │   │
+│  │  ├── covers/             # Extracted book cover thumbnails          │   │
 │  │  ├── narration/          # Generated audio files                    │   │
+│  │  ├── voices/             # Voice samples for cloning                │   │
 │  │  └── bundles/            # Exported .actualbook files               │   │
 │  │                                                                     │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
@@ -60,7 +62,7 @@ Technical architecture for Actual Reader.
 │                          (iOS, Android)                                     │
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                         FRONTEND (React)                            │   │
+│  │                         FRONTEND (Solid.js)                            │   │
 │  │                                                                     │   │
 │  │  ┌───────────┐  ┌───────────┐  ┌───────────────────────────────┐   │   │
 │  │  │  Library  │  │  Reader   │  │          Settings             │   │   │
@@ -88,7 +90,7 @@ Technical architecture for Actual Reader.
 
 ## Module Breakdown
 
-### Frontend Modules (React)
+### Frontend Modules (Solid.js)
 
 ```
 src/
@@ -96,26 +98,28 @@ src/
 │   ├── BookCard.tsx
 │   ├── NarrationPlayer.tsx
 │   ├── ProgressBar.tsx
+│   ├── VoiceSelector.tsx
+│   ├── TtsControls.tsx
+│   ├── ImportModal.tsx
 │   └── ...
 ├── views/                # Top-level views (pages)
 │   ├── LibraryView.tsx
 │   ├── ReaderView.tsx
-│   ├── GeneratorView.tsx    # Desktop only
+│   ├── GeneratorView.tsx    # Desktop only, TTS controls + queue
 │   └── SettingsView.tsx
-├── hooks/                # React hooks
-│   ├── useLibrary.ts
-│   ├── useNarration.ts
-│   └── useSync.ts
-├── stores/               # State management
+├── stores/               # Solid.js stores (reactive state)
 │   ├── libraryStore.ts
 │   ├── readerStore.ts
-│   └── settingsStore.ts
+│   ├── settingsStore.ts
+│   └── voiceStore.ts
 ├── tauri/                # Tauri IPC bindings
 │   ├── commands.ts
 │   └── events.ts
 └── types/                # TypeScript types
     └── index.ts
 ```
+
+**Note:** Solid.js uses stores instead of React hooks. No virtual DOM, fine-grained reactivity.
 
 ### Backend Modules (Rust)
 
@@ -221,7 +225,7 @@ User clicks "Generate" (or auto-process on import)
         │
         ▼
 ┌───────────────┐
-│ Storage       │ ─── Saves .mp3 + updates markers in DB
+│ Storage       │ ─── Saves .wav + updates markers in DB
 └───────┬───────┘
         │
         ▼
@@ -334,8 +338,25 @@ invoke('get_segments', { bookId: string }): Promise<Segment[]>
 invoke('save_progress', { bookId: string, progress: Progress }): Promise<void>
 
 // TTS (desktop only)
-invoke('generate_narration', { bookId: string, voiceId: string }): Promise<void>
+invoke('generate_narration', {
+    bookId: string,
+    voiceId: string,
+    exaggeration: number,  // 0-10
+    cfgWeight: number,     // 0-3
+    temperature: number    // 0-5
+}): Promise<void>
+invoke('generate_quick_audio', {
+    text: string,
+    voiceId: string,
+    exaggeration: number,
+    cfgWeight: number,
+    temperature: number
+}): Promise<Uint8Array>    // Returns WAV audio data
 invoke('get_voices'): Promise<Voice[]>
+invoke('create_voice', { name: string, samplePath: string }): Promise<Voice>
+invoke('delete_voice', { voiceId: string }): Promise<void>
+invoke('set_default_voice', { voiceId: string }): Promise<void>
+invoke('get_presets'): Promise<Preset[]>
 invoke('cancel_generation'): Promise<void>
 
 // Bundle
@@ -375,6 +396,7 @@ CREATE TABLE books (
     author TEXT,
     source_format TEXT NOT NULL,  -- 'epub', 'markdown', 'txt', 'pdf'
     source_path TEXT NOT NULL,
+    cover_path TEXT,             -- Extracted cover thumbnail (NULL if none)
     narration_status TEXT NOT NULL DEFAULT 'none',  -- 'none', 'generating', 'ready'
     narration_path TEXT,
     created_at INTEGER NOT NULL,
@@ -415,8 +437,21 @@ CREATE TABLE voices (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     -- engine is always 'chatterbox', no column needed
-    sample_path TEXT,      -- Path to voice sample for cloning
-    is_default INTEGER NOT NULL DEFAULT 0
+    sample_path TEXT NOT NULL,  -- Path to voice sample for cloning
+    is_default INTEGER NOT NULL DEFAULT 0,
+    is_custom INTEGER NOT NULL DEFAULT 1  -- 0 = shipped with app, 1 = user-created
+);
+
+-- TTS Presets
+CREATE TABLE presets (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    exaggeration REAL NOT NULL DEFAULT 0.5,
+    cfg_weight REAL NOT NULL DEFAULT 0.5,
+    temperature REAL NOT NULL DEFAULT 0.8,
+    is_global INTEGER NOT NULL DEFAULT 1,  -- 1 = applies to any voice
+    voice_id TEXT REFERENCES voices(id) ON DELETE CASCADE,  -- NULL if global
+    is_default INTEGER NOT NULL DEFAULT 0  -- 0 = user-created, 1 = shipped with app
 );
 
 -- Settings
@@ -424,6 +459,14 @@ CREATE TABLE settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+-- Default presets (shipped with app)
+-- INSERT INTO presets VALUES ('preset_robot', 'Robot', 0.05, 0.7, 0.5, 1, NULL, 1);
+-- INSERT INTO presets VALUES ('preset_calm', 'Calm', 0.25, 0.5, 0.7, 1, NULL, 1);
+-- INSERT INTO presets VALUES ('preset_default', 'Default', 0.5, 0.5, 0.8, 1, NULL, 1);
+-- INSERT INTO presets VALUES ('preset_expressive', 'Expressive', 0.8, 0.4, 0.9, 1, NULL, 1);
+-- INSERT INTO presets VALUES ('preset_dramatic', 'Dramatic', 1.2, 0.3, 1.0, 1, NULL, 1);
+-- INSERT INTO presets VALUES ('preset_unhinged', 'Unhinged', 2.0, 0.2, 1.3, 1, NULL, 1);
 ```
 
 ---
@@ -439,7 +482,7 @@ book.actualbook
 │   ├── segments.json   # Text segments
 │   └── source.*        # Original file (optional)
 ├── narration/
-│   ├── audio.mp3       # Full narration audio
+│   ├── audio.wav       # Full narration audio
 │   └── markers.json    # Timing markers
 └── assets/             # Images, fonts, etc. (optional)
     └── ...

@@ -19,21 +19,30 @@ Exact versions and dependencies for Actual Reader.
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| react | ^18.3.0 | UI framework |
-| react-dom | ^18.3.0 | React DOM renderer |
+| solid-js | ^1.8.0 | UI framework (reactive, no virtual DOM) |
 | typescript | ^5.4.0 | Type safety |
 | @tauri-apps/api | ^2.0.0 | Tauri IPC bindings |
 | vite | ^5.4.0 | Build tool |
-| zustand | ^4.5.0 | State management |
-| react-router-dom | ^6.22.0 | Routing |
+| vite-plugin-solid | ^2.10.0 | Solid.js Vite integration |
+| @solidjs/router | ^0.14.0 | Routing |
 
 ### Why These Versions
 
-- **React 18.3**: Stable, concurrent features, good ecosystem
+- **Solid.js 1.8**: Fine-grained reactivity, smaller bundles than React
 - **TypeScript 5.4**: Latest stable, better inference
 - **Vite 5.4**: Fast builds, good Tauri integration
-- **Zustand**: Simple state management, no boilerplate (not Redux)
-- **React Router 6**: Standard routing, works with Tauri
+- **vite-plugin-solid**: Required for JSX compilation
+- **@solidjs/router**: Standard routing for Solid.js, works with Tauri
+
+### Why Solid.js (Not React)
+
+Migrated from React to Solid.js in January 2026:
+
+- **Smaller bundles**: No virtual DOM overhead
+- **Faster runtime**: Fine-grained reactivity, no reconciliation
+- **Simpler mental model**: Reactive primitives (signals, effects)
+- **No hook rules**: No deps arrays, no stale closure bugs
+- **JSX familiarity**: Same syntax, different runtime
 
 ---
 

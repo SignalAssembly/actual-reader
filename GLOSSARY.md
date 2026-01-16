@@ -37,13 +37,41 @@ The generated audio for a book. Not "audio", "speech", "voice", or "TTS output".
 ```
 
 ### Voice
-A TTS voice profile used to generate narration. Not "speaker", "narrator", or "model".
+A TTS voice sample used for cloning. Not "speaker", "narrator", or "model".
 
 ```
 ✓ "Select a voice"
 ✓ "Clone your voice"
 ✗ "Select a speaker"
 ✗ "Clone your narrator"
+```
+
+Voices can be:
+- **Default**: Shipped with the app, ready to use
+- **Custom**: Created by user from uploaded audio/video
+
+### Preset
+A saved combination of TTS parameters (exaggeration, CFG weight, temperature). Not "settings", "config", or "profile".
+
+```
+✓ "Apply the Dramatic preset"
+✓ "Create a custom preset"
+✗ "Apply the Dramatic settings"
+✗ "Create a custom config"
+```
+
+Presets can be:
+- **Default**: Shipped with app (Robot, Calm, Default, Expressive, Dramatic, Unhinged)
+- **Custom**: Created by user
+- **Global**: Applies to any voice
+- **Local**: Saved within a specific profile
+
+### Profile
+A Voice + Preset combination. The complete TTS configuration. Not "style" or "persona".
+
+```
+✓ "Use the 'Narrator - Expressive' profile"
+✗ "Use the narrator style"
 ```
 
 ### Segment
@@ -226,6 +254,9 @@ Never use these terms in code, UI, or documentation:
 | add (for import) | import |
 | model (for TTS) | engine or voice |
 | client | desktop or mobile |
+| config/settings (for TTS) | preset |
+| speaker/narrator | voice |
+| style/persona | profile |
 
 ---
 
@@ -239,10 +270,13 @@ book: Book
 library: Library
 narration: Narration
 voice: Voice
+preset: Preset
+profile: Profile
 segment: Segment
 marker: Marker
 bundle: Bundle
 progress: Progress
+ttsParams: TtsParameters
 
 // Incorrect
 doc: Document
@@ -250,4 +284,7 @@ audioFile: AudioFile
 chunk: Chunk
 timestamp: Timestamp
 position: Position
+config: Config
+settings: Settings
+style: Style
 ```

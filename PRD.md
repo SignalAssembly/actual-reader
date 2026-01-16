@@ -1,7 +1,7 @@
 # Actual Reader - Product Requirements Document
 
-**Version**: 0.1 (Draft)
-**Last Updated**: 2026-01-15
+**Version**: 0.2
+**Last Updated**: 2026-01-16
 
 ---
 
@@ -91,25 +91,43 @@ Mobile devices and browsers cannot run this. Desktop can.
 ## User Stories
 
 ### Core Reading Experience
-- [ ] As a user, I can import and read books without audio processing
-- [ ] As a user, I can open an EPUB file and read it (with images preserved)
-- [ ] As a user, I can open a Markdown file and read it
-- [ ] As a user, I can open a TXT file and read it
+- [x] As a user, I can import and read books without audio processing
+- [x] As a user, I can open an EPUB file and read it (with images preserved)
+- [x] As a user, I can open a Markdown file and read it
+- [x] As a user, I can open a TXT file and read it
 - [ ] As a user, I can open a PDF file and read it (best-effort text extraction)
-- [ ] As a user, I can adjust font size, theme, and reading preferences
+- [x] As a user, I can adjust font size, theme, and reading preferences
 
 ### Import & Processing
-- [ ] First-time modal explains processing (with "Don't show again" checked by default)
-- [ ] As a user, I can choose to "Process Now" or "Just Import" on import
+- [x] First-time modal explains processing (with "Don't show again" checked by default)
+- [x] As a user, I can choose to "Process Now" or "Just Import" on import
 - [ ] As a user, I can process a book later via kebab menu ("Process for audio")
 - [ ] As a user, I can see processing progress with option to run in background
 - [ ] As a user, I can check on background processing tasks
 
 ### Audio Generation
 - [ ] As a user, I can generate TTS audio for any book with one click
-- [ ] As a user, I can choose from multiple TTS voices (Chatterbox clones)
-- [ ] As a user, I can use my own voice clone for narration
+- [x] As a user, I can choose from multiple TTS voices (Chatterbox clones)
+- [x] As a user, I can use my own voice clone for narration
 - [ ] As a user, I can see progress while audio is generating
+
+### TTS Controls (Generator View)
+- [x] As a user, I can select a voice for narration
+- [x] As a user, I can adjust exaggeration (0-10) for voice expressiveness
+- [x] As a user, I can adjust CFG weight (0-3) for generation quality
+- [x] As a user, I can adjust temperature (0-5) for voice variation
+- [x] As a user, I can choose from presets: Robot, Calm, Default, Expressive, Dramatic, Unhinged
+- [ ] As a user, I can quick-generate audio from text input
+- [x] As a user, I can manage voices (create, delete, set default)
+- [x] As a user, I can create a voice clone by uploading video/audio
+
+### Voice System
+- [x] App ships with default voices ready to use
+- [x] As a user, I can create custom voice clones from audio/video uploads
+- [ ] As a user, I can create custom presets (saved parameter combinations)
+- [ ] Global presets apply to any voice
+- [ ] Local presets are saved within a specific profile
+- [ ] Profiles = Voice + Preset combination
 
 ### Image Handling
 - [ ] Images are preserved and displayed in reading view
@@ -118,17 +136,29 @@ Mobile devices and browsers cannot run this. Desktop can.
 - [ ] Uses local vision model (Qwen2.5-VL-7B) for caption generation
 
 ### Synced Playback
-- [ ] As a user, I can play audio and see text highlighted in sync
-- [ ] As a user, I can click any paragraph to jump audio to that position
+- [x] As a user, I can play audio and see text highlighted in sync
+- [x] As a user, I can click any paragraph to jump audio to that position
 - [ ] As a user, I can adjust playback speed (0.5x - 2x)
 - [ ] As a user, I can pause/resume with spacebar
 - [ ] As a user, I can skip forward/back by sentence or paragraph
 
 ### Library Management
-- [ ] As a user, I can see all my books in a library view
-- [ ] As a user, I can see book status: 📖 text-only | ⏳ processing | 🎧 ready
+- [x] As a user, I can see all my books in a library view
+- [x] As a user, I can see book status: 📖 text-only | ⏳ processing | 🎧 ready
 - [ ] As a user, I can sync my library across devices
-- [ ] As a user, I can import books from filesystem or URL
+- [x] As a user, I can import books from filesystem or URL
+
+### Library Sorting & Views
+- [ ] As a user, I can sort by date added (default, most recent first)
+- [ ] As a user, I can sort by last opened
+- [ ] As a user, I can sort alphabetically by title
+- [ ] As a user, I can manually arrange books (drag-and-drop in grid, up/down in list)
+- [ ] Manual order is saved separately for grid and list views
+- [x] As a user, I can toggle between grid and list views
+- [ ] List view has detail mode (with cover thumbnails) and compact mode (icon only)
+- [ ] Grid cards show actual book cover extracted from EPUB
+- [ ] Recently opened section appears below main library with same card style
+- [ ] Sort preferences persist across sessions
 
 ### Cross-Platform
 - [ ] As a user, I can use the app on Windows, Mac, and Linux
@@ -149,7 +179,7 @@ Mobile devices and browsers cannot run this. Desktop can.
 | Desktop Runtime | Tauri 2.0 | Small binary, Rust backend, native webview |
 | Mobile Runtime | Tauri Mobile | Same codebase as desktop |
 | Web Runtime | Static deploy | Same frontend, no backend needed |
-| Frontend | React + TypeScript | Best LLM support, massive ecosystem |
+| Frontend | Solid.js + TypeScript | Reactive, fast, smaller bundles than React |
 | TTS Engine | Chatterbox (local) | Free, voice cloning, runs on all desktop GPUs |
 | Vision Model | Qwen2.5-VL-7B-7B (local) | Image captioning for audio, free, high quality |
 | Format Parsing | Rust crates | epub, pdf, markdown parsers |
@@ -211,12 +241,14 @@ Book {
   title: string
   format: epub | markdown | txt | pdf
   source_path: string
+  cover_path: string?            // Extracted cover thumbnail
   audio_status: none | generating | ready
   audio_path: string?
   sync_data: SyncData?
   reading_position: Position
   created_at: timestamp
   updated_at: timestamp
+  last_opened_at: timestamp?     // For "Recently Opened" and sorting
 }
 
 SyncData {
@@ -236,6 +268,38 @@ Position {
   element_id: string
   audio_time: float?
   scroll_offset: float
+}
+
+Voice {
+  id: string
+  name: string
+  sample_path: string    // Voice sample for cloning
+  is_default: boolean
+  is_custom: boolean     // false = shipped with app, true = user-created
+}
+
+TtsParameters {
+  exaggeration: float    // 0-10, controls expressiveness
+  cfg_weight: float      // 0-3, controls generation quality
+  temperature: float     // 0-5, controls variation
+}
+
+Preset {
+  id: string
+  name: string
+  params: TtsParameters
+  is_global: boolean     // true = applies to any voice
+  voice_id: string?      // if not global, which voice this belongs to
+  is_default: boolean    // shipped with app vs user-created
+}
+
+LibraryPreferences {
+  view_mode: 'grid' | 'list'
+  list_style: 'detail' | 'compact'
+  sort_mode: 'date_added' | 'manual' | 'alphabetical' | 'last_opened'
+  sort_order: 'asc' | 'desc'
+  grid_order: [book_id]   // Manual order for grid view
+  list_order: [book_id]   // Manual order for list view
 }
 ```
 
@@ -260,7 +324,7 @@ For v0.1, focus on:
 3. Chatterbox TTS (local generation)
 4. Paragraph-level sync highlighting
 5. Manual export/import for mobile transfer
-6. React + TypeScript frontend
+6. Solid.js + TypeScript frontend
 
 For v0.2:
 1. Mobile apps (Android APK, iOS via jailbreak)

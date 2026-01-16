@@ -25,6 +25,7 @@ interface Book {
     author: string | null;
     sourceFormat: SourceFormat;
     sourcePath: string;
+    coverPath: string | null;        // Extracted cover thumbnail (NULL if none)
     narrationStatus: NarrationStatus;
     narrationPath: string | null;
     createdAt: Timestamp;
@@ -72,10 +73,54 @@ interface Voice {
     name: string;
     samplePath: string;  // Voice sample for cloning (required - Chatterbox needs it)
     isDefault: boolean;
+    isCustom: boolean;   // false = shipped with app, true = user-created
 }
+
+// TTS generation parameters
+interface TtsParameters {
+    exaggeration: number;  // 0-10, controls expressiveness
+    cfgWeight: number;     // 0-3, controls generation quality
+    temperature: number;   // 0-5, controls variation
+}
+
+// Preset = saved parameter combination
+type PresetId = string;    // "preset_" + UUID v4
+
+interface Preset {
+    id: PresetId;
+    name: string;
+    params: TtsParameters;
+    isGlobal: boolean;     // true = applies to any voice
+    voiceId: VoiceId | null;  // if not global, which voice this belongs to
+    isDefault: boolean;    // true = shipped with app, false = user-created
+}
+
+// Built-in presets
+const DEFAULT_PRESETS: Record<string, TtsParameters> = {
+    robot:      { exaggeration: 0.05, cfgWeight: 0.7, temperature: 0.5 },
+    calm:       { exaggeration: 0.25, cfgWeight: 0.5, temperature: 0.7 },
+    default:    { exaggeration: 0.5,  cfgWeight: 0.5, temperature: 0.8 },
+    expressive: { exaggeration: 0.8,  cfgWeight: 0.4, temperature: 0.9 },
+    dramatic:   { exaggeration: 1.2,  cfgWeight: 0.3, temperature: 1.0 },
+    unhinged:   { exaggeration: 2.0,  cfgWeight: 0.2, temperature: 1.3 },
+};
 
 interface Library {
     books: Book[];
+}
+
+// Library view and sorting preferences
+type SortMode = 'date_added' | 'manual' | 'alphabetical' | 'last_opened';
+type SortOrder = 'asc' | 'desc';
+type ListStyle = 'detail' | 'compact';  // detail = with cover, compact = icon only
+
+interface LibraryPreferences {
+    viewMode: 'grid' | 'list';
+    listStyle: ListStyle;         // For list view: show cover or icon
+    sortMode: SortMode;
+    sortOrder: SortOrder;
+    gridOrder: BookId[];          // Manual order for grid view
+    listOrder: BookId[];          // Manual order for list view
 }
 
 interface SyncServer {
@@ -152,6 +197,7 @@ pub struct Book {
     pub author: Option<String>,
     pub source_format: SourceFormat,
     pub source_path: String,
+    pub cover_path: Option<String>,   // Extracted cover thumbnail
     pub narration_status: NarrationStatus,
     pub narration_path: Option<String>,
     pub created_at: i64,
@@ -222,6 +268,56 @@ pub struct Voice {
     pub name: String,
     pub sample_path: String,  // Required - Chatterbox needs voice sample
     pub is_default: bool,
+    pub is_custom: bool,      // false = shipped with app, true = user-created
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TtsParameters {
+    pub exaggeration: f64,   // 0-10
+    pub cfg_weight: f64,     // 0-3
+    pub temperature: f64,    // 0-5
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct PresetId(pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Preset {
+    pub id: PresetId,
+    pub name: String,
+    pub params: TtsParameters,
+    pub is_global: bool,
+    pub voice_id: Option<VoiceId>,
+    pub is_default: bool,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SortMode {
+    DateAdded,
+    Manual,
+    Alphabetical,
+    LastOpened,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ListStyle {
+    Detail,
+    Compact,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LibraryPreferences {
+    pub view_mode: String,       // "grid" | "list"
+    pub list_style: ListStyle,
+    pub sort_mode: SortMode,
+    pub sort_order: String,      // "asc" | "desc"
+    pub grid_order: Vec<BookId>,
+    pub list_order: Vec<BookId>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -365,7 +461,9 @@ pub struct ImportPreferences {
     "text": "Hello, world.",
     "voice_sample": "/path/to/voice.wav",
     "options": {
-        "exaggeration": 0.3
+        "exaggeration": 0.5,
+        "cfg_weight": 0.5,
+        "temperature": 0.8
     }
 }
 ```
@@ -437,6 +535,16 @@ Stored in `settings` table as key-value pairs.
 | `default_voice` | `VoiceId \| null` | `null` | Default voice for generation |
 | `auto_play` | `boolean` | `false` | Auto-play on book open |
 | `sync_port` | `number` | `42069` | Local sync server port |
+| `library_view_mode` | `"grid" \| "list"` | `"grid"` | Library display mode |
+| `library_list_style` | `"detail" \| "compact"` | `"detail"` | List view style (with covers or icons) |
+| `library_sort_mode` | `SortMode` | `"date_added"` | How to sort books |
+| `library_sort_order` | `"asc" \| "desc"` | `"desc"` | Sort direction |
+| `library_grid_order` | `string` | `"[]"` | JSON array of book IDs for manual grid order |
+| `library_list_order` | `string` | `"[]"` | JSON array of book IDs for manual list order |
+| `tts_exaggeration` | `number` | `0.5` | Default TTS exaggeration |
+| `tts_cfg_weight` | `number` | `0.5` | Default TTS CFG weight |
+| `tts_temperature` | `number` | `0.8` | Default TTS temperature |
+| `tts_last_preset` | `PresetId \| null` | `null` | Last used preset |
 
 ---
 
