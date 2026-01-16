@@ -38,7 +38,21 @@ interface Segment {
     index: number;           // 0-based position
     content: string;         // Plain text
     html: string | null;     // Optional HTML rendering
+    segmentType: SegmentType; // 'text' | 'image'
+    imageData: ImageData | null; // Only for image segments
 }
+
+type SegmentType = 'text' | 'image';
+
+interface ImageData {
+    sourcePath: string;      // Path to image file
+    caption: string | null;  // AI-generated caption for narration
+    altText: string | null;  // Original alt text from source
+    pageNumber: number | null; // Page number if available
+    position: ImagePosition; // Position on page
+}
+
+type ImagePosition = 'top' | 'middle' | 'bottom' | 'full-page' | 'inline';
 
 interface Marker {
     segmentId: SegmentId;
@@ -75,6 +89,23 @@ interface SyncResult {
     progressSynced: number;
     errors: string[];
 }
+
+// Import preferences (persisted)
+interface ImportPreferences {
+    autoProcess: boolean;       // true = process on import, false = just import
+    showImportModal: boolean;   // false after "Don't show again" checked
+}
+
+// Generation progress events
+interface GenerationProgress {
+    bookId: BookId;
+    stage: GenerationStage;
+    current: number;            // Current segment/image
+    total: number;              // Total segments/images
+    message: string;            // Human-readable status
+}
+
+type GenerationStage = 'extracting' | 'captioning' | 'narrating' | 'finalizing';
 ```
 
 ---
@@ -128,6 +159,33 @@ pub struct Book {
     pub last_opened_at: Option<i64>,  // None if never opened
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SegmentType {
+    Text,
+    Image,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ImagePosition {
+    Top,
+    Middle,
+    Bottom,
+    FullPage,
+    Inline,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageData {
+    pub source_path: String,
+    pub caption: Option<String>,
+    pub alt_text: Option<String>,
+    pub page_number: Option<u32>,
+    pub position: ImagePosition,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Segment {
@@ -136,6 +194,8 @@ pub struct Segment {
     pub index: u32,
     pub content: String,
     pub html: Option<String>,
+    pub segment_type: SegmentType,
+    pub image_data: Option<ImageData>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -162,6 +222,32 @@ pub struct Voice {
     pub name: String,
     pub sample_path: String,  // Required - Chatterbox needs voice sample
     pub is_default: bool,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum GenerationStage {
+    Extracting,
+    Captioning,
+    Narrating,
+    Finalizing,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GenerationProgress {
+    pub book_id: BookId,
+    pub stage: GenerationStage,
+    pub current: u32,
+    pub total: u32,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportPreferences {
+    pub auto_process: bool,
+    pub show_import_modal: bool,
 }
 ```
 

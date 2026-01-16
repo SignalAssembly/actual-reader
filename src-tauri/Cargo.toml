@@ -21,6 +21,7 @@ tauri-build = { version = "2.5", features = [] }
 # Tauri framework
 tauri = { version = "2.0", features = [] }
 tauri-plugin-log = "2"
+tauri-plugin-dialog = "2"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -36,7 +37,7 @@ tokio = { version = "1.36", features = ["full"] }
 uuid = { version = "1.7", features = ["v4", "serde"] }
 
 # Bundle/archive handling
-zip = "0.6"
+zip = "2.1"
 
 # Document parsing
 epub = "2.1"
@@ -44,6 +45,17 @@ pulldown-cmark = "0.10"
 
 # Service discovery (for sync)
 mdns-sd = "0.10"
+flume = "0.11"  # Re-used from mdns-sd for receiver timeout matching
+
+# HTTP server for sync
+axum = "0.7"
+tower-http = { version = "0.5", features = ["cors"] }
+
+# HTTP client for sync
+reqwest = { version = "0.12", features = ["json"] }
+
+# Hostname discovery
+hostname = "0.4"
 
 # Logging
 log = "0.4"

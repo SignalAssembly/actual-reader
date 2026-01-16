@@ -216,6 +216,44 @@ cargo install cargo-watch
 
 ---
 
+## Vision Model (Image Captioning)
+
+| Component | Version | Notes |
+|-----------|---------|-------|
+| Qwen2.5-VL-7B-Instruct | latest | Image captioning for narration |
+| transformers | 4.45+ | Hugging Face model loading |
+| accelerate | 0.30+ | Model optimization |
+| torch | 2.2+ | Shared with TTS |
+
+### Why Qwen2.5-VL-7B
+
+Evaluated in January 2026:
+
+| Model | MMMU Score | VRAM Required | Practical? |
+|-------|------------|---------------|------------|
+| InternVL3-78B | 72.2 | ~160GB | ❌ |
+| Qwen2.5-VL-72B | 70.2 | ~150GB | ❌ |
+| Qwen2.5-VL-7B | 58.6 | ~16GB | ✅ |
+| LLaMA 3.2-11B | 50.7 | ~24GB | ✅ |
+| MiniCPM-o 2.6 | ~55 | ~8GB | ✅ |
+
+**Qwen2.5-VL-7B** is the best quality model that runs on consumer GPUs:
+- Beats LLaMA 3.2-11B Vision despite smaller size
+- Excellent at detailed visual description and OCR
+- Runs on RTX 3090/4090 class GPUs
+- Same Python environment as TTS (shared torch)
+
+### Vision requirements.txt
+
+```
+transformers>=4.45.0
+accelerate>=0.30.0
+qwen-vl-utils
+pillow>=10.0.0
+```
+
+---
+
 ## Dependency Update Policy
 
 1. **Security patches**: Apply immediately

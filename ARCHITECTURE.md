@@ -137,6 +137,7 @@ src-tauri/
 │   │   │   ├── txt.rs
 │   │   │   └── pdf.rs
 │   │   ├── tts.rs        # TTS bridge, desktop only
+│   │   ├── vision.rs     # Image captioning, desktop only
 │   │   ├── sync.rs
 │   │   └── bundle.rs
 │   ├── models/           # Data structures
@@ -161,12 +162,22 @@ User selects file
         │
         ▼
 ┌───────────────┐
+│ First Import? │──── Yes ───► Show Import Modal
+└───────┬───────┘              ┌─────────────────┐
+        │ No                   │ "Process Now"   │
+        │                      │ "Just Import"   │
+        │                      │ [x] Don't show  │
+        │                      └────────┬────────┘
+        │◄──────────────────────────────┘
+        ▼
+┌───────────────┐
 │ Parser Service│ ─── Detects format (EPUB/MD/TXT/PDF)
 └───────┬───────┘
         │
         ▼
 ┌───────────────┐
-│ Extract Text  │ ─── Converts to segments
+│ Extract Text  │ ─── Converts to segments (text + images)
+│ + Images      │     Images stored as image segments
 └───────┬───────┘
         │
         ▼
@@ -174,24 +185,39 @@ User selects file
 │ Library Mgr   │ ─── Saves to SQLite + copies source
 └───────┬───────┘
         │
-        ▼
-Book appears in Library View
+        ├──── "Just Import" ────► Book appears (📖 text-only)
+        │
+        └──── "Process Now" ────► Start Generation (background)
 ```
 
 ### Generate Narration
 
 ```
-User clicks "Generate"
+User clicks "Generate" (or auto-process on import)
         │
         ▼
 ┌───────────────┐
-│ TTS Bridge    │ ─── Spawns Python subprocess
+│ Stage 1:      │ ─── Find all image segments
+│ EXTRACTING    │
 └───────┬───────┘
         │
         ▼
 ┌───────────────┐
-│ Chatterbox    │ ─── Generates audio per segment
-└───────┬───────┘     (returns audio + markers)
+│ Stage 2:      │ ─── Qwen2.5-VL generates captions
+│ CAPTIONING    │     "Second image on page 87..."
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│ Stage 3:      │ ─── Chatterbox generates audio
+│ NARRATING     │     Text segments + image captions
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│ Stage 4:      │ ─── Concatenate audio, save markers
+│ FINALIZING    │
+└───────┬───────┘
         │
         ▼
 ┌───────────────┐
@@ -199,7 +225,15 @@ User clicks "Generate"
 └───────┬───────┘
         │
         ▼
-Book now has narration (play button appears)
+Book now has narration (🎧 ready)
+```
+
+### Library Status Indicators
+
+```
+📖 text-only   ─── Book imported, no narration
+⏳ processing  ─── Narration being generated (background)
+🎧 ready       ─── Narration complete, can play
 ```
 
 ### Play Narration

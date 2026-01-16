@@ -15,6 +15,8 @@ pub struct AppPaths {
     pub narration: PathBuf,
     /// Directory for exported .actualbook bundles.
     pub bundles: PathBuf,
+    /// Directory for voice sample files.
+    pub voices: PathBuf,
 }
 
 impl AppPaths {
@@ -25,6 +27,7 @@ impl AppPaths {
             sources: root.join("sources"),
             narration: root.join("narration"),
             bundles: root.join("bundles"),
+            voices: root.join("voices"),
             root,
         }
     }
@@ -35,6 +38,7 @@ impl AppPaths {
         std::fs::create_dir_all(&self.sources)?;
         std::fs::create_dir_all(&self.narration)?;
         std::fs::create_dir_all(&self.bundles)?;
+        std::fs::create_dir_all(&self.voices)?;
         Ok(())
     }
 
@@ -62,6 +66,11 @@ impl AppPaths {
     pub fn bundle_path(&self, book_id: &str) -> PathBuf {
         self.bundles.join(format!("{}.actualbook", book_id))
     }
+
+    /// Get the voice sample file path.
+    pub fn voice_sample_path(&self, voice_id: &str, extension: &str) -> PathBuf {
+        self.voices.join(format!("{}.{}", voice_id, extension))
+    }
 }
 
 /// Get the sources directory path.
@@ -79,6 +88,11 @@ pub fn get_bundles_dir(root: &Path) -> PathBuf {
     root.join("bundles")
 }
 
+/// Get the voices directory path.
+pub fn get_voices_dir(root: &Path) -> PathBuf {
+    root.join("voices")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,6 +106,7 @@ mod tests {
         assert_eq!(paths.sources, root.join("sources"));
         assert_eq!(paths.narration, root.join("narration"));
         assert_eq!(paths.bundles, root.join("bundles"));
+        assert_eq!(paths.voices, root.join("voices"));
     }
 
     #[test]

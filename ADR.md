@@ -316,3 +316,92 @@ Need to decide what features the web version supports.
 - Web users can't manage library
 - Must upload bundle to web to read
 - Limited use case (sharing, quick access)
+
+---
+
+## ADR-011: Qwen2.5-VL for Image Captioning
+
+**Status:** Accepted
+**Date:** 2026-01-15
+
+### Decision
+Use Qwen2.5-VL-7B-Instruct for generating image captions during narration.
+
+### Context
+Books contain images that need audio descriptions. When generating narration, images should be described for listeners with context (position on page, description of content).
+
+### Options Considered
+1. **InternVL3-78B** - SOTA quality (MMMU 72.2), but needs ~160GB VRAM
+2. **Qwen2.5-VL-72B** - Excellent quality (MMMU 70.2), but needs ~150GB VRAM
+3. **Qwen2.5-VL-7B** - Great quality (MMMU 58.6), runs on consumer GPUs (~16GB)
+4. **LLaMA 3.2-11B Vision** - Good quality (MMMU 50.7), ~24GB VRAM
+5. **MiniCPM-o 2.6** - Fast throughput, lower quality (~55 MMMU), ~8GB VRAM
+6. **Cloud APIs (GPT-4V, Claude)** - Best quality, but costs money
+
+### Rationale
+- **Quality priority**: User is dogfooding, wants highest quality possible on consumer hardware
+- **Qwen2.5-VL-7B beats larger competitors**: Outperforms LLaMA 3.2-11B Vision despite being smaller
+- **Consumer GPU compatible**: Runs on RTX 3090/4090 class GPUs (16-24GB VRAM)
+- **Free and local**: No API costs, no internet required, same as TTS philosophy
+- **Shared environment**: Same Python/torch setup as Chatterbox TTS
+- **Detailed descriptions**: Excellent at OCR and visual reasoning for precise captions
+
+### Caption Format
+```
+"[Position] image on page [N], [location on page]: [detailed description]"
+
+Example: "Second image on page 87, two-thirds down: A diagram showing the
+water cycle with labeled arrows indicating evaporation, condensation, and
+precipitation stages."
+```
+
+### Consequences
+- Adds ~14GB to model downloads (on top of TTS models)
+- Image processing adds time to narration generation
+- Requires GPU with 16GB+ VRAM for quality model
+- Users with less VRAM could use MiniCPM-o 2.6 as fallback (future enhancement)
+
+---
+
+## ADR-012: Import Without Processing
+
+**Status:** Accepted
+**Date:** 2026-01-15
+
+### Decision
+Allow users to import books without generating narration, as a pure ebook reader.
+
+### Context
+Not every user wants audio narration for every book. Some may want to:
+- Read without audio (traditional ebook experience)
+- Process narration later when they have time
+- Test the reader before committing to long generation times
+
+### Options Considered
+1. **Always process on import** - Simpler, but forces long wait
+2. **Never auto-process** - User must explicitly request, more control
+3. **Ask on import** - Modal with "Process Now" or "Just Import" options
+
+### Rationale
+- First-time users shouldn't wait 30+ minutes before seeing the app work
+- Power users may have specific books they want narrated vs. just read
+- Background processing allows work to continue while using the app
+- Modal with "Don't show again" (checked by default) reduces friction after first use
+
+### Import Flow
+```
+1. User imports book
+2. First-time: Modal appears
+   - "Process Now" - Start narration generation
+   - "Just Import" - Add to library as text-only
+   - [x] Don't show this again (checked by default)
+3. Subsequent imports: Uses remembered preference
+4. Library shows status: 📖 text-only | ⏳ processing | 🎧 ready
+5. Kebab menu on any book: "Generate narration" option
+```
+
+### Consequences
+- More complex import flow
+- Need to persist user preference
+- Library view needs status indicators
+- Background processing queue management

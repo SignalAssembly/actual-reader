@@ -168,7 +168,8 @@ export const useSettingsStore = create<SettingsStore>()((set, get) => ({
 
     // Capture previous values for rollback
     for (const key of Object.keys(settings) as (keyof Settings)[]) {
-      previousState[key] = get()[key] as Settings[typeof key];
+      // @ts-expect-error - Type assignment works at runtime
+      previousState[key] = get()[key];
     }
 
     // Optimistic update

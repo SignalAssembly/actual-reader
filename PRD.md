@@ -91,17 +91,31 @@ Mobile devices and browsers cannot run this. Desktop can.
 ## User Stories
 
 ### Core Reading Experience
-- [ ] As a user, I can open an EPUB file and read it
+- [ ] As a user, I can import and read books without audio processing
+- [ ] As a user, I can open an EPUB file and read it (with images preserved)
 - [ ] As a user, I can open a Markdown file and read it
 - [ ] As a user, I can open a TXT file and read it
 - [ ] As a user, I can open a PDF file and read it (best-effort text extraction)
 - [ ] As a user, I can adjust font size, theme, and reading preferences
 
+### Import & Processing
+- [ ] First-time modal explains processing (with "Don't show again" checked by default)
+- [ ] As a user, I can choose to "Process Now" or "Just Import" on import
+- [ ] As a user, I can process a book later via kebab menu ("Process for audio")
+- [ ] As a user, I can see processing progress with option to run in background
+- [ ] As a user, I can check on background processing tasks
+
 ### Audio Generation
 - [ ] As a user, I can generate TTS audio for any book with one click
-- [ ] As a user, I can choose from multiple TTS voices
+- [ ] As a user, I can choose from multiple TTS voices (Chatterbox clones)
 - [ ] As a user, I can use my own voice clone for narration
 - [ ] As a user, I can see progress while audio is generating
+
+### Image Handling
+- [ ] Images are preserved and displayed in reading view
+- [ ] Images get auto-generated captions for audio narration
+- [ ] Caption format: "Second image on page 87, two-thirds down: [description]"
+- [ ] Uses local vision model (Qwen2.5-VL-7B) for caption generation
 
 ### Synced Playback
 - [ ] As a user, I can play audio and see text highlighted in sync
@@ -112,7 +126,7 @@ Mobile devices and browsers cannot run this. Desktop can.
 
 ### Library Management
 - [ ] As a user, I can see all my books in a library view
-- [ ] As a user, I can see which books have generated audio
+- [ ] As a user, I can see book status: 📖 text-only | ⏳ processing | 🎧 ready
 - [ ] As a user, I can sync my library across devices
 - [ ] As a user, I can import books from filesystem or URL
 
@@ -137,6 +151,7 @@ Mobile devices and browsers cannot run this. Desktop can.
 | Web Runtime | Static deploy | Same frontend, no backend needed |
 | Frontend | React + TypeScript | Best LLM support, massive ecosystem |
 | TTS Engine | Chatterbox (local) | Free, voice cloning, runs on all desktop GPUs |
+| Vision Model | Qwen2.5-VL-7B-7B (local) | Image captioning for audio, free, high quality |
 | Format Parsing | Rust crates | epub, pdf, markdown parsers |
 | Audio Sync | Custom JSON | Timestamp format inspired by SMIL |
 

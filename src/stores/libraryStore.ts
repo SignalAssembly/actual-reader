@@ -18,6 +18,8 @@ interface LibraryState {
   books: Book[];
   /** Loading state for async operations */
   loading: boolean;
+  /** Importing state for book import operations */
+  importing: boolean;
   /** Error message from last failed operation */
   error: string | null;
 }
@@ -43,12 +45,13 @@ type LibraryStore = LibraryState & LibraryActions;
 // Store Implementation
 // =============================================================================
 
-export const useLibraryStore = create<LibraryStore>()((set, get) => ({
+export const useLibraryStore = create<LibraryStore>()((set) => ({
   // ---------------------------------------------------------------------------
   // State
   // ---------------------------------------------------------------------------
   books: [],
   loading: false,
+  importing: false,
   error: null,
 
   // ---------------------------------------------------------------------------
@@ -67,33 +70,35 @@ export const useLibraryStore = create<LibraryStore>()((set, get) => ({
   },
 
   importBook: async (path: string) => {
-    set({ loading: true, error: null });
+    set({ loading: true, importing: true, error: null });
     try {
       const book = await commands.importBook(path);
       set((state) => ({
         books: [...state.books, book],
         loading: false,
+        importing: false,
       }));
       return book;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to import book';
-      set({ error: message, loading: false });
+      set({ error: message, loading: false, importing: false });
       throw err;
     }
   },
 
   importBundle: async (path: string) => {
-    set({ loading: true, error: null });
+    set({ loading: true, importing: true, error: null });
     try {
       const book = await commands.importBundle(path);
       set((state) => ({
         books: [...state.books, book],
         loading: false,
+        importing: false,
       }));
       return book;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to import bundle';
-      set({ error: message, loading: false });
+      set({ error: message, loading: false, importing: false });
       throw err;
     }
   },
