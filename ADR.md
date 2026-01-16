@@ -90,7 +90,10 @@ Need high-quality TTS that runs locally, supports voice cloning, and is free.
 - Voice cloning is a killer feature
 - Runs on all major GPU platforms (CUDA, ROCm, MPS)
 - Local = no API costs, no internet required, privacy preserved
-- Quality is very good (not quite ElevenLabs, but close)
+- Quality is very good
+
+### Final Decision
+**Chatterbox only.** No multi-engine support. Keeps the codebase simple. Users who want ElevenLabs quality can use ElevenLabs directly and import the audio.
 
 ### Consequences
 - Requires GPU for reasonable speed

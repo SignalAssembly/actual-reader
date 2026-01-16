@@ -181,7 +181,7 @@ Transferring books/progress between devices. Not "transfer", "share", or "send".
 ## Technical
 
 ### Engine
-The TTS system (Chatterbox, Piper, etc.). Not "model", "backend", or "synthesizer".
+The TTS system. Actual Reader uses Chatterbox exclusively. Not "model", "backend", or "synthesizer".
 
 ```
 ✓ "TTS engine"

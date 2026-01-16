@@ -17,7 +17,7 @@ type Duration = number;      // Seconds (float)
 
 type SourceFormat = 'epub' | 'markdown' | 'txt' | 'pdf';
 type NarrationStatus = 'none' | 'generating' | 'ready';
-type Engine = 'chatterbox' | 'piper' | 'elevenlabs';
+// TTS engine is always Chatterbox - no enum needed
 
 interface Book {
     id: BookId;
@@ -56,8 +56,7 @@ interface Progress {
 interface Voice {
     id: VoiceId;
     name: string;
-    engine: Engine;
-    samplePath: string | null;  // Voice sample for cloning
+    samplePath: string;  // Voice sample for cloning (required - Chatterbox needs it)
     isDefault: boolean;
 }
 
@@ -112,13 +111,7 @@ pub enum NarrationStatus {
     Ready,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Engine {
-    Chatterbox,
-    Piper,
-    Elevenlabs,
-}
+// TTS engine is always Chatterbox - no Engine enum needed
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -167,8 +160,7 @@ pub struct Progress {
 pub struct Voice {
     pub id: VoiceId,
     pub name: String,
-    pub engine: Engine,
-    pub sample_path: Option<String>,
+    pub sample_path: String,  // Required - Chatterbox needs voice sample
     pub is_default: bool,
 }
 ```
@@ -187,8 +179,7 @@ pub struct Voice {
     "sourceFormat": "epub",
     "createdAt": 1705334400,
     "voice": {
-        "name": "Rocket Scientist",
-        "engine": "chatterbox"
+        "name": "Rocket Scientist"
     },
     "narration": {
         "duration": 32580.5,
@@ -207,7 +198,7 @@ pub struct Voice {
 - `sourceFormat`: One of "epub", "markdown", "txt", "pdf"
 - `createdAt`: Unix timestamp (seconds)
 - `voice.name`: Display name of voice
-- `voice.engine`: One of "chatterbox", "piper", "elevenlabs"
+- `voice.name`: Display name of voice (engine is always Chatterbox)
 - `narration.duration`: Total seconds (float)
 - `narration.segmentCount`: Number of segments (integer)
 - `checksum`: SHA-256 of audio file, prefixed with "sha256:"
@@ -286,10 +277,7 @@ pub struct Voice {
     "type": "generate",
     "id": "req_001",
     "text": "Hello, world.",
-    "voice": {
-        "engine": "chatterbox",
-        "sample": "/path/to/voice.wav"
-    },
+    "voice_sample": "/path/to/voice.wav",
     "options": {
         "exaggeration": 0.3
     }

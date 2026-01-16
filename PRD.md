@@ -156,9 +156,7 @@ Mobile devices and browsers cannot run this. Desktop can.
   - Known memory leak issue, but functional
 - Mac Intel: CPU-only, slow but works
 
-**Optional cloud fallback:**
-- ElevenLabs API for users who prefer cloud
-- Useful for Mac Intel users who want faster generation
+**No cloud fallback.** Chatterbox only. Local generation, no API costs, no internet required.
 
 ### Sync Strategy
 

@@ -380,7 +380,7 @@ CREATE TABLE progress (
 CREATE TABLE voices (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    engine TEXT NOT NULL,  -- 'chatterbox', 'piper', etc.
+    -- engine is always 'chatterbox', no column needed
     sample_path TEXT,      -- Path to voice sample for cloning
     is_default INTEGER NOT NULL DEFAULT 0
 );
@@ -423,7 +423,7 @@ book.actualbook
     "created_at": 1705334400,
     "voice": {
         "name": "Rocket Scientist",
-        "engine": "chatterbox"
+        "name": "Rocket Scientist"
     },
     "duration": 3600.5,
     "segment_count": 150
